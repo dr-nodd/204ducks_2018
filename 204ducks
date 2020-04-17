@@ -1,0 +1,66 @@
+#!/usr/bin/python3
+
+import sys
+import argparse
+import math
+
+proba = lambda a, t : a * math.exp(-t) + (4 - 3 * a) * math.exp(-2 * t) + (2 * a - 4) * math.exp(-4 * t)
+proba_2 = lambda a, t : -a * math.exp(-t) - (4 - 3 * a) / 2 * math.exp(-2 * t) - (2 * a - 4) / 4 * math.exp(-4 * t)
+
+
+def check_float(a):
+    value = float(a)
+    if value < 0 or value > 2.5:
+        raise argparse.ArgumentTypeError("%r must be positive and inferior or equal to 2.5"%(value,))
+    return value
+
+
+if len(sys.argv) == 2:
+    parser = argparse.ArgumentParser(description='204ducks')
+    parser.add_argument('a', type=check_float)
+
+
+try:
+    args = parser.parse_args()
+except:
+    exit(84)
+
+
+def displayTime(t):
+    print("{:d}m {:d}{:d}s" .format(int(t / 60), int(t % 60 / 10), int(round(t % 10))))
+
+
+def timeDucksBack(a, min):
+    i = 1.0
+    while True:
+        if proba_2(a, i / 60) - proba_2(a, 0) >= min:
+            return i
+        i += 0.01
+
+
+p = 0
+r = 0
+t = 0
+while p < 99.9999:
+    p += proba(args.a, t) / 10
+    r += (proba(args.a, t) / 10) * t
+    t += 0.001
+r = r / 100
+print("Average return time: {:d}m {:02d}s".format(int(r), round(((r - int(r)) * 60))))
+d = 0
+while t > 0:
+    d += ((t - r) ** 2) * (proba(args.a, t) / 10)
+    t -= 0.001
+d = (d / 99.999) ** 0.5
+print("Standard deviation: {0:.3f}" .format(d))
+
+t = timeDucksBack(args.a, 0.5)
+print("Time after which 50% of the ducks are back: ", end='')
+displayTime(t)
+
+t = timeDucksBack(args.a, 0.99)
+print("Time after which 99% of the ducks are back: ", end='')
+displayTime(t)
+
+print("Percentage of ducks back after 1 minute: {:.1f}%".format((proba_2(args.a, 1) - proba_2(args.a, 0)) * 100))
+print("Percentage of ducks back after 2 minutes: {:.1f}%".format((proba_2(args.a, 2) - proba_2(args.a, 0)) * 100))
